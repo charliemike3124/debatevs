@@ -1,0 +1,84 @@
+// Config
+$sm: 520px;
+$md: 768px;
+$lg: 990px;
+$xl: 1280px;
+
+$sectionPaddingSm: 50px;
+$sectionPaddingLg: 85px;
+$sectionMaxWidthSm: 360px;
+$sectionMaxWidthMd: 500px;
+$sectionMaxWidthLg: 950px;
+$sectionMaxWidthXl: 1200px;
+
+$navbarHeight: 50px;
+
+// Sm screens
+section,
+main {
+    padding-top: $sectionPaddingSm;
+    padding-bottom: $sectionPaddingSm;
+    > div {
+        max-width: $sectionMaxWidthSm;
+    }
+}
+nav {
+    width: 100vw;
+    height: $navbarHeight;
+    max-width: $sectionMaxWidthSm;
+    margin: 0 auto;
+}
+
+// Md screens
+@media (min-width: $sm) {
+    section,
+    main {
+        padding-top: $sectionPaddingLg;
+        padding-bottom: $sectionPaddingLg;
+        > div {
+            max-width: $sectionMaxWidthMd;
+        }
+    }
+    nav {
+        width: 100vw;
+        height: $navbarHeight;
+        max-width: $sectionMaxWidthMd;
+        margin: 0 auto;
+    }
+}
+
+// Lg screens
+@media (min-width: $lg) {
+    section,
+    main {
+        padding-top: $sectionPaddingLg;
+        padding-bottom: $sectionPaddingLg;
+        > div {
+            max-width: $sectionMaxWidthLg;
+        }
+    }
+    nav {
+        width: 100vw;
+        height: $navbarHeight;
+        max-width: $sectionMaxWidthLg;
+        margin: 0 auto;
+    }
+}
+
+// Xl screens
+@media (min-width: $xl) {
+    section,
+    main {
+        padding-top: $sectionPaddingLg;
+        padding-bottom: $sectionPaddingLg;
+        > div {
+            max-width: $sectionMaxWidthXl;
+        }
+    }
+    nav {
+        width: 100vw;
+        height: $navbarHeight;
+        max-width: $sectionMaxWidthXl;
+        margin: 0 auto;
+    }
+}

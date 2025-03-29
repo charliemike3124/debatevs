@@ -1,0 +1,19 @@
+.avatar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 4px 16px;
+    border-radius: 16px;
+    transition-duration: 150ms;
+
+    &:hover {
+        background-color: rgb(29, 29, 29);
+    }
+
+    img {
+        height: 40px;
+        width: 40px;
+        border-radius: 50%;
+    }
+}

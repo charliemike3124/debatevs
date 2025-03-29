@@ -1,0 +1,22 @@
+.nav {
+    height: 72px;
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .nav-btn {
+        height: 36px;
+        width: 120px;
+        border-radius: 12px;
+        background-color: white;
+        color: rgb(26, 26, 26);
+        cursor: pointer;
+        transition-duration: 200ms;
+        font-weight: bold;
+
+        &:hover {
+            background-color: rgb(233, 233, 233);
+        }
+    }
+}

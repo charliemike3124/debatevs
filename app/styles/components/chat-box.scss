@@ -1,0 +1,46 @@
+.wrapper {
+    width: 100%;
+    height: 100%;
+    padding: 8px 0 0;
+
+    .message-wrapper {
+        border: 1px solid whitesmoke;
+        border-radius: 8px;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 10px 20px;
+        min-height: 100%;
+        max-height: 100%;
+
+        .message {
+            display: flex;
+            color: white;
+            align-items: end;
+            width: 300px;
+            border-radius: 8px;
+
+            &.for {
+                background: rgb(9, 9, 44);
+            }
+
+            &.against {
+                background: rgb(58, 9, 9);
+                align-self: flex-end;
+            }
+        }
+    }
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    section {
+        flex-grow: 1;
+    }
+}
