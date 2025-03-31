@@ -19,7 +19,9 @@ async function getRooms(): Promise<RoomLightweight[]> {
                 status: data.status,
                 spectators: data.spectators ? data.spectators.length : 0,
                 currentTurn: data.currentTurn,
-                creatorStance: data.stance,
+                creatorStance: data.creatorStance,
+                participantAgainstPhotoUrl: data.participantAgainstPhotoUrl,
+                participantForPhotoUrl: data.participantForPhotoUrl,
             });
         });
         return rooms;
@@ -36,9 +38,9 @@ export default async function Home() {
         <div className="flex flex-col items-center justify-center min-h-screen">
             <section className="flex flex-col items-center  py-12 flex-grow w-full">
                 <h2 className="text-4xl font-extrabold  mb-4">Welcome!</h2>
-                <p className="text-lg text-gray-300 mb-4">
+                <div className="text-lg text-gray-300 mb-4">
                     Create a discussion room to engage in thought-provoking debates.
-                </p>
+                </div>
 
                 <div className="flex space-x-4">
                     <Link

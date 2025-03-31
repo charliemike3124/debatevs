@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import { FieldValue, Timestamp } from 'firebase/firestore';
 import { ChatMessage } from './chat';
 
 interface Room {
@@ -6,14 +6,14 @@ interface Room {
     title: string;
     creatorId: string;
     creatorUsername: string;
-    creationDate: Date;
+    creationDate: Timestamp | FieldValue;
     status: Status;
     creatorStance: Stance;
     participantForId: string | null;
     participantAgainstId: string | null;
     participantForPhotoUrl: string | null;
     participantAgainstPhotoUrl: string | null;
-    spectators: string[];
+    spectators: User[];
     currentTurn: Stance;
     turnStartTime: Timestamp | null;
     pointsFor: number;
@@ -27,17 +27,19 @@ interface RoomLightweight {
     id: string;
     title: string;
     creatorUsername: string;
-    creationDate: Date;
+    creationDate: Timestamp | FieldValue;
     spectators: string[];
     currentTurn: Stance;
     creatorStance: Stance;
     status: Status;
+    participantAgainstPhotoUrl: string | null;
+    participantForPhotoUrl: string | null;
 }
 
-interface Participant {
-    id: String | null;
-    isSpectator: Boolean;
-    stance: Stance | null;
+interface User {
+    id: string | null;
+    name: string | null;
+    photoUrl: string | null;
 }
 
 enum Status {
@@ -51,6 +53,6 @@ enum Stance {
     'against',
 }
 
-export type { Room, RoomLightweight, Participant };
+export type { Room, RoomLightweight, User };
 
 export { Status, Stance };

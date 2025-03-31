@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './styles/global/globals.scss';
 import './styles/global/layout.scss';
 import './styles/global/misc.scss';
+import RoomProvider from '@/providers/roomProvider/roomProvider';
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -62,16 +63,18 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
-            <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}>
-                <NavigationBar />
+        <RoomProvider>
+            <html lang="en">
+                <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}>
+                    <NavigationBar />
 
-                {children}
+                    {children}
 
-                <footer className="w-full py-4 text-center text-gray-600">
-                    <p>© {new Date().getFullYear()} Debate Versus Me</p>
-                </footer>
-            </body>
-        </html>
+                    <footer className="w-full py-4 text-center text-gray-600">
+                        <p>© {new Date().getFullYear()} Debate Versus Me</p>
+                    </footer>
+                </body>
+            </html>
+        </RoomProvider>
     );
 }

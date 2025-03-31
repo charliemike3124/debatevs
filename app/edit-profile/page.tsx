@@ -18,6 +18,7 @@ export default function EditProfile() {
     async function logout() {
         try {
             await signOut(auth);
+            window.location.href = '/';
         } catch (error) {
             console.error('Logout Failed:', error);
         }
@@ -25,7 +26,7 @@ export default function EditProfile() {
 
     return (
         <div className="flex flex-col items-center min-h-screen">
-            <section>
+            <section className="flex flex-col gap-10">
                 <div>
                     <h1 className="mb-8">Edit your Info</h1>
                     <EditPorifleForm
@@ -34,6 +35,12 @@ export default function EditProfile() {
                         onLogout={logout}
                         onSubmit={handleSubmit}
                     />
+                </div>
+
+                <div>
+                    <button className="btn" onClick={logout}>
+                        Logout
+                    </button>
                 </div>
             </section>
         </div>

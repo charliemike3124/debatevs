@@ -11,6 +11,8 @@
   "dependencies": {
     "@firebase/auth": "^1.9.1",
     "@firebase/firestore": "^4.7.10",
+    "@geist-ui/core": "^2.3.8",
+    "@geist-ui/icons": "^1.0.2",
     "firebase": "^11.5.0",
     "next": "15.2.3",
     "react": "^19.0.0",

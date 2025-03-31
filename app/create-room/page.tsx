@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import CreateRoomForm from './CreateRoomForm';
 import { db, auth } from '@/services/firebase';
 import { collection, addDoc, doc, serverTimestamp } from 'firebase/firestore';
@@ -12,11 +12,17 @@ export default function CreateRoom() {
     const [title, setTitle] = useState<string>('');
     const [stance, setStance] = useState<Stance>(Stance.for);
 
-    const [user, loading, error] = useAuthState(auth);
+    const [user] = useAuthState(auth);
+
+    useEffect(() => {
+        if (!user) {
+            alert('You must be logged in to create a room.');
+            return;
+        }
+    }, []);
 
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
-
         if (!user) {
             alert('You must be logged in to create a room.');
             return;
@@ -32,7 +38,7 @@ export default function CreateRoom() {
                 title: title,
                 creatorId: user.uid,
                 creatorUsername: user.displayName || 'Anonymous',
-                creationDate: new Date(),
+                creationDate: serverTimestamp(),
                 status: Status.open,
                 creatorStance: stance,
                 participantForId: stance === Stance.for ? participantId : null,

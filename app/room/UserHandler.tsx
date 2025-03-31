@@ -3,40 +3,38 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { db, auth } from '@/services/firebase';
-import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { Participant, Stance, Status } from '@/models/room';
+import { doc, updateDoc, arrayUnion, arrayRemove, DocumentReference, serverTimestamp } from 'firebase/firestore';
+import { Stance, Status, User } from '@/models/room';
+import useRoomContext from '@/hooks/useRoomContext';
 import Modal from '@/app/UI/Modal';
 
 interface Props {
-    creatorId: string;
-    participantAgainstId: string | null;
-    participantForId: string | null;
-    creatorStance: Stance;
     roomId: string;
 }
-export default function UserHandler({
-    creatorId,
-    participantAgainstId,
-    participantForId,
-    creatorStance,
-    roomId,
-}: Props) {
-    const [user, loading, error] = useAuthState(auth);
+
+export default function UserHandler({ roomId }: Props) {
+    const [user] = useAuthState(auth);
+    const { room } = useRoomContext();
+
     const [showParticipantModal, setShowParticipantModal] = useState(false);
-    const [participant, setParticipant] = useState<Participant>({ id: null, isSpectator: true, stance: null });
+    const [isSpectator, setIsSpectator] = useState<Boolean>(true);
     const [isParticipantSubmitted, setIsParticipantSubmitted] = useState(false);
 
     useEffect(() => {
-        if (isParticipantSubmitted || showParticipantModal) return;
+        console.log(user);
+        if (isParticipantSubmitted || showParticipantModal || !room) return;
 
-        const isRoomFull = participantAgainstId && participantForId;
+        const isRoomFull = room?.participantAgainstId && room?.participantForId;
+        const isRoomCreator = user?.uid === room?.creatorId;
         if (!isRoomFull && !!user) {
-            const isRoomCreator = user?.uid === creatorId;
             if (isRoomCreator) {
-                setParticipant({ id: user?.uid, isSpectator: false, stance: creatorStance });
-            } else {
+                setIsSpectator(false);
+            } else if ([Status.in_progress, Status.open].includes(room.status)) {
                 setShowParticipantModal(true);
             }
+        } else if (!isRoomCreator) {
+            const roomRef = doc(db, 'rooms', roomId);
+            addSpectator(roomRef);
         }
 
         console.log('handleBeforeUnload added');
@@ -45,25 +43,26 @@ export default function UserHandler({
         return () => {
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, [user, participantAgainstId, participantForId]);
+    }, [user, room?.participantAgainstId, room?.participantForId]);
 
     async function handleBeforeUnload() {
+        if (!room) return;
+
         try {
             const roomRef = doc(db, 'rooms', roomId);
-            let updateData: any = {};
+            let updateData: any = { status: Status.completed };
 
-            if (participantForId === user?.uid) {
+            if (room.participantForId === user?.uid) {
                 updateData.participantForId = null;
-            } else if (participantAgainstId === user?.uid) {
+                updateData.winnerId = room.participantAgainstId;
+            } else if (room.participantAgainstId === user?.uid) {
                 updateData.participantAgainstId = null;
+                updateData.winnerId = room.participantForId;
             } else {
                 updateData.spectators = arrayRemove(user?.uid);
             }
 
-            if (Object.keys(updateData).length > 0) {
-                console.log('user removed');
-                await updateDoc(roomRef, updateData);
-            }
+            await updateDoc(roomRef, updateData);
         } catch (error) {
             console.error('Error removing participant:', error);
         }
@@ -73,19 +72,16 @@ export default function UserHandler({
         e.preventDefault();
         setIsParticipantSubmitted(true);
 
-        if (!user || !roomId) return;
+        if (!user || !room) return;
 
         try {
             const roomRef = doc(db, 'rooms', roomId);
 
-            if (participant.isSpectator) {
-                await updateDoc(roomRef, {
-                    spectators: arrayUnion(user.uid),
-                });
-                console.log('Added user to spectators');
+            if (isSpectator && ![room.participantAgainstId, room.participantForId].includes(user.uid)) {
+                addSpectator(roomRef);
             } else {
                 let updateData: any = {};
-                if (creatorStance === Stance.for) {
+                if (room.creatorStance === Stance.for) {
                     updateData = { participantAgainstId: user.uid, participantAgainstPhotoUrl: user.photoURL };
                 } else {
                     updateData = { participantForId: user.uid, participantForPhotoUrl: user.photoURL };
@@ -93,7 +89,6 @@ export default function UserHandler({
 
                 console.log('adding new participant:', updateData);
 
-                updateData.status = Status.in_progress;
                 await updateDoc(roomRef, updateData);
             }
         } catch (error) {
@@ -102,6 +97,19 @@ export default function UserHandler({
         } finally {
             if (closeModal) setShowParticipantModal(false);
         }
+    }
+
+    async function addSpectator(roomRef: DocumentReference) {
+        const spectatorUser: User = {
+            id: user?.uid ?? null,
+            name: user?.displayName ?? 'Anonymous',
+            photoUrl: user?.photoURL ?? '/anonymous',
+        };
+
+        await updateDoc(roomRef, {
+            spectators: arrayUnion(spectatorUser),
+        });
+        console.log('Added user to spectators');
     }
 
     return (
@@ -118,27 +126,23 @@ export default function UserHandler({
                         <div className="flex gap-2 mt-2">
                             <div
                                 className={
-                                    participant.isSpectator
-                                        ? 'border px-4 py-2 opacity-50'
-                                        : 'bg-blue-500 text-white px-4 py-2'
+                                    isSpectator ? 'border px-4 py-2 opacity-50' : 'bg-blue-500 text-white px-4 py-2'
                                 }
-                                onClick={() => setParticipant({ ...participant, isSpectator: false })}
+                                onClick={() => setIsSpectator(false)}
                             >
                                 Participant
                             </div>
                             <div
                                 className={
-                                    participant.isSpectator
-                                        ? 'bg-blue-500 text-white px-4 py-2'
-                                        : 'border px-4 py-2 opacity-50'
+                                    isSpectator ? 'bg-blue-500 text-white px-4 py-2' : 'border px-4 py-2 opacity-50'
                                 }
-                                onClick={() => setParticipant({ ...participant, isSpectator: true })}
+                                onClick={() => setIsSpectator(true)}
                             >
                                 Spectator
                             </div>
                         </div>
                     </div>
-                    {participant.isSpectator ? (
+                    {isSpectator ? (
                         <div className="my-8"></div>
                     ) : (
                         <div className="my-8">
@@ -147,7 +151,9 @@ export default function UserHandler({
                             </label>
                             <input
                                 readOnly
-                                value={creatorStance === Stance.against ? Stance[Stance.for] : Stance[Stance.against]}
+                                value={
+                                    room?.creatorStance === Stance.against ? Stance[Stance.for] : Stance[Stance.against]
+                                }
                             />
                         </div>
                     )}
