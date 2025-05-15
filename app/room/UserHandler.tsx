@@ -15,35 +15,21 @@ interface Props {
 export default function UserHandler({ roomId }: Props) {
     const [user] = useAuthState(auth);
     const { room } = useRoomContext();
-
     const [showParticipantModal, setShowParticipantModal] = useState(false);
     const [isSpectator, setIsSpectator] = useState<Boolean>(true);
     const [isParticipantSubmitted, setIsParticipantSubmitted] = useState(false);
 
-    useEffect(() => {
-        console.log(user);
-        if (isParticipantSubmitted || showParticipantModal || !room) return;
-
-        const isRoomFull = room?.participantAgainstId && room?.participantForId;
-        const isRoomCreator = user?.uid === room?.creatorId;
-        if (!isRoomFull && !!user) {
-            if (isRoomCreator) {
-                setIsSpectator(false);
-            } else if ([Status.in_progress, Status.open].includes(room.status)) {
-                setShowParticipantModal(true);
-            }
-        } else if (!isRoomCreator) {
-            const roomRef = doc(db, 'rooms', roomId);
-            addSpectator(roomRef);
-        }
-
-        console.log('handleBeforeUnload added');
-        window.addEventListener('beforeunload', handleBeforeUnload);
-
-        return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
+    async function addSpectator(roomRef: DocumentReference) {
+        const spectatorUser: User = {
+            id: user?.uid ?? null,
+            name: user?.displayName ?? 'Anonymous',
+            photoUrl: user?.photoURL ?? '/anonymous',
         };
-    }, [user, room?.participantAgainstId, room?.participantForId]);
+
+        await updateDoc(roomRef, {
+            spectators: arrayUnion(spectatorUser),
+        });
+    }
 
     async function handleBeforeUnload() {
         if (!room) return;
@@ -87,8 +73,6 @@ export default function UserHandler({ roomId }: Props) {
                     updateData = { participantForId: user.uid, participantForPhotoUrl: user.photoURL };
                 }
 
-                console.log('adding new participant:', updateData);
-
                 await updateDoc(roomRef, updateData);
             }
         } catch (error) {
@@ -99,18 +83,29 @@ export default function UserHandler({ roomId }: Props) {
         }
     }
 
-    async function addSpectator(roomRef: DocumentReference) {
-        const spectatorUser: User = {
-            id: user?.uid ?? null,
-            name: user?.displayName ?? 'Anonymous',
-            photoUrl: user?.photoURL ?? '/anonymous',
-        };
+    useEffect(() => {
+        if (isParticipantSubmitted || showParticipantModal || !room) return;
 
-        await updateDoc(roomRef, {
-            spectators: arrayUnion(spectatorUser),
-        });
-        console.log('Added user to spectators');
-    }
+        const isRoomFull = room?.participantAgainstId && room?.participantForId;
+        const isRoomCreator = user?.uid === room?.creatorId;
+        
+        if (!isRoomFull && !!user) {
+            if (isRoomCreator) {
+                setIsSpectator(false);
+            } else if ([Status.in_progress, Status.open].includes(room.status)) {
+                setShowParticipantModal(true);
+            }
+        } else if (!isRoomCreator) {
+            const roomRef = doc(db, 'rooms', roomId);
+            addSpectator(roomRef);
+        }
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [user, room?.participantAgainstId, room?.participantForId]);
 
     return (
         <div>

@@ -49,7 +49,7 @@ export default function Chatbox({
 
     async function handleSendMessage(e: React.FormEvent) {
         e.preventDefault();
-        if (!user || !newMessage.trim() || !roomId || !isChatEnabled || !isMyTurn) return;
+        if (!user || !newMessage.trim() || !roomId || !isChatEnabled || !isMyTurn || !room) return;
 
         try {
             const roomRef = doc(db, 'rooms', roomId);
@@ -128,7 +128,7 @@ export default function Chatbox({
                                 Send
                             </button>
                         </form>
-                    ) : room.status === Status.in_progress ? (
+                    ) : room!.status === Status.in_progress ? (
                         <div className="p-4">It's not your turn to chat.</div>
                     ) : (
                         <div></div>

@@ -36,7 +36,6 @@ export default function RoomPage({ params }: PageProps) {
         fetchData();
 
         return () => {
-            console.log('Cleanup - Unsubscribing from room:', id);
             if (unsubscribe) {
                 unsubscribe();
             }
@@ -49,17 +48,12 @@ export default function RoomPage({ params }: PageProps) {
 
             if (roomSnapshot.exists()) {
                 const roomData = roomSnapshot.data() as Room;
-
-                // If status is "in_progress" or "open", subscribe to real-time updates
+                
                 if (roomData.status === Status.in_progress || roomData.status === Status.open) {
-                    console.log('Subscribing to room:', id);
-                    return subscribeToRoom(roomRef); // Return the unsubscribe function
+                    return subscribeToRoom(roomRef);
                 } else {
-                    console.log('Fetching room once:', id);
-                    setRoom(roomData); // Only set room once if status doesn't match
+                    setRoom(roomData);
                 }
-            } else {
-                console.log('Room not found!');
             }
         } catch (error) {
             console.error('Error fetching room:', error);
@@ -69,35 +63,23 @@ export default function RoomPage({ params }: PageProps) {
     }
 
     function subscribeToRoom(roomRef: DocumentReference) {
-        console.log('Subscribing to room:', id);
-
-        const unsubscribe = onSnapshot(roomRef, (snapshot) => {
+        return onSnapshot(roomRef, (snapshot) => {
             if (snapshot.exists()) {
                 const roomData = snapshot.data() as Room;
-
                 const noUpdateNeeded = !roomData.turnStartTime && roomData.status === Status.in_progress;
-                console.log('noUpdateNeeded:', noUpdateNeeded);
 
                 if (!noUpdateNeeded) {
                     setRoom(roomData);
-                    console.log('room updated:', roomData);
                 }
 
-                if (roomData.status === Status.open) {
-                    const onParticipantsReady = !!roomData.participantAgainstId && !!roomData.participantForId;
-
-                    if (onParticipantsReady) {
-                        console.log('Timer started', user?.uid);
-                        setHasDiscussionStarted(true);
-                        startTurnTimer();
-                    }
+                if (roomData.status === Status.open && 
+                    roomData.participantAgainstId && 
+                    roomData.participantForId) {
+                    setHasDiscussionStarted(true);
+                    startTurnTimer();
                 }
-            } else {
-                console.log('Room not found in snapshot!');
             }
         });
-
-        return unsubscribe;
     }
 
     function startTurnTimer() {
@@ -127,7 +109,7 @@ export default function RoomPage({ params }: PageProps) {
                 ) : (
                     <div className="flex justify-center gap-8">
                         <span>Current Turn: {Stance[room.currentTurn]}</span>
-                        <span>Spectators: {room.spectators?.length?.toString() || '0'}</span>
+                        <span>Spectators: {room.spectators?.length || 0}</span>
                         <Tooltip
                             text={
                                 'You can submit this discussion for review. Other users will be able to see the chat and vote for either participant. The first participant to reach 20 votes wins.'
